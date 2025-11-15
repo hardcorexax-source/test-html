@@ -1,75 +1,150 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="ru">
 <head>
-<meta charset="UTF-8">
-<title>Moving Mask Windows</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Окошки-маски на общем неподвижном фоне</title>
 <style>
-    body {
-        margin: 0;
-        height: 100vh;
-        overflow: hidden;
-        font-family: sans-serif;
-    }
+  :root{
+    /* Замените URL на своё изображение общего фона */
+    --bg: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1200&q=80');
+    /* дополнительное фиксированное изображение (второе неподвижное изображение) */
+    --dec: url('https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=1200&q=80');
+  }
 
-    /* Фон, который всегда фиксирован */
-    .bg {
-        position: fixed;
-        inset: 0;
-        background: url("https://picsum.photos/2000/1200") center/cover no-repeat;
-        z-index: 0;
-    }
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: #111; /* фон страницы, если нужно */
+    color: #fff;
+  }
 
-    /* Контейнер со скроллом и маской */
-    .masked-scroll {
-        position: relative;
-        height: 100vh;
-        overflow-y: scroll;
-        z-index: 1;
+  /* декоративное второе фиксированное изображение (пример: табличка/логотип) */
+  .decoration{
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 140px;
+    height: 90px;
+    background-image: var(--dec);
+    background-size: cover;
+    background-position: center;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0,0,0,.6);
+    pointer-events:none;
+    z-index: 40;
+    opacity: .95;
+  }
 
-        /* Маска: две круглые дырки */
-        mask-image:
-            radial-gradient(circle 140px at 50% 20%, transparent 0 140px, black 150px),
-            radial-gradient(circle 110px at 30% 70%, transparent 0 110px, black 120px);
+  .page {
+    min-height:100vh;
+    padding: 40px;
+    box-sizing: border-box;
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    align-items:start;
+  }
 
-        /* чтобы маска двигалась вместе со скроллом */
-        mask-repeat: no-repeat;
-        mask-size: 100% 100%;
-        mask-position: 0 0; /* движется со скроллом */
-        
-        /* Safari support */
-        -webkit-mask-image:
-            radial-gradient(circle 140px at 50% 20%, transparent 0 140px, black 150px),
-            radial-gradient(circle 110px at 30% 70%, transparent 0 110px, black 120px);
-        -webkit-mask-repeat: no-repeat;
-        -webkit-mask-size: 100% 100%;
-        -webkit-mask-position: 0 0;
-    }
+  /* Контейнеры-«окошки» */
+  .window {
+    min-height: 240px;
+    height: 360px;
+    border-radius: 14px;
+    overflow: auto;             /* контент внутри окна скроллится */
+    box-shadow: 0 8px 30px rgba(0,0,0,.6);
+    position: relative;
+    background-clip: padding-box;
+    /* ключевая часть: каждый блок использует одно и то же изображение,
+       прикреплённое к viewport (fixed) — визуально все окна "смотрят" на одно изображение */
+    background-image: var(--bg);
+    background-attachment: fixed;
+    background-size: cover;
+    background-position: center center;
+    padding: 20px;
+    z-index: 10;
+    border: 1px solid rgba(255,255,255,.06);
+    color: #fff;
+  }
 
-    .content {
-        padding: 200px 40px;
-        min-height: 200vh;
-        color: white;
-        font-size: 28px;
-        line-height: 1.5;
-        background: rgba(0, 0, 0, 1); /* видно только внутри дырок */
-    }
+  /* Демонстрация: контент внутри окна */
+  .window .content{
+    line-height: 1.5;
+  }
+
+  /* Пример маски: круговое "окошко" с плавным края (в современных WebKit/Blink) */
+  .window.mask-circle {
+    /* -webkit-mask-image для Safari/Chrome; mask-image — стандарт */
+    -webkit-mask-image: radial-gradient(circle at 50% 30%, rgba(0,0,0,1) 0 60%, rgba(0,0,0,0) 75%);
+            mask-image: radial-gradient(circle at 50% 30%, rgba(0,0,0,1) 0 60%, rgba(0,0,0,0) 75%);
+    -webkit-mask-mode: alpha;
+            mask-mode: alpha;
+    /* можно добавить прозрачный бекграунд, чтобы за маской был виден фон страницы */
+    background-color: rgba(0,0,0,0.15);
+  }
+
+  /* Пример маски с прямоугольным отверстием (по центру) */
+  .window.mask-hole {
+    background-color: rgba(0,0,0,0.25);
+    /* создаём «окно» через mask (черная — видимая, прозрачная — скрытая) */
+    -webkit-mask-image:
+      linear-gradient(#000,#000),
+      radial-gradient(ellipse 60% 40% at 50% 45%, rgba(0,0,0,1) 0 60%, rgba(0,0,0,0) 61%);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+
+  /* Если хотите просто форму без плавного размытия, используйте clip-path */
+  .window.clip {
+    -webkit-clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+            clip-path: polygon(0 0, 100% 0, 100% 85%, 50% 100%, 0 85%);
+  }
+
+  /* Внешний текст и декоративные элементы */
+  h1{ margin:0 0 10px 0; font-size:18px }
+  p.lead{ margin:0 0 12px 0; opacity:.95 }
+  .spacer{ height:1200px } /* для демонстрации общей страницы скролла */
 </style>
 </head>
 <body>
+  <div class="decoration" aria-hidden="true"></div>
 
-<div class="bg"></div>
-
-<div class="masked-scroll">
-    <div class="content">
-        <p>Скролль вниз — маска движется!</p>
-        <p>Фон остаётся неподвижным.</p>
-        <p>Окошки — это прозрачные зоны маски.</p>
-        <p>Маска закреплена в элементе, который скроллится, поэтому она двигается вместе с контентом.</p>
-        <p>Можно сделать сколько угодно окон.</p>
-        <p>Можно анимировать их, менять размеры, поворачивать.</p>
-        <p>Можно даже сделать форму окна SVG-произвольной.</p>
+  <div class="page">
+    <div class="window mask-circle" tabindex="0" aria-label="Окошко 1 — круглая маска">
+      <h1>Круглая маска — скролл внутри</h1>
+      <p class="lead">Это окно показывает одно и то же неподвижное изображение (фон зафиксирован относительно окна просмотра). Текст здесь длинный, чтобы появился скролл панели внутри окна.</p>
+      <div class="content">
+        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Recusandae, beatae, impedit? Doloremque, eaque!</p>
+        <p>Следующий блок контента — демонстрация прокрутки. Прокрутите внутри этого блока: фон не будет сдвигаться, а будет казаться, что вы смотрите в фиксированный фон через «окошко».</p>
+        <p>Еще немного текста. Еще немного текста. Еще немного текста. Еще немного текста.</p>
+        <p>Еще немного текста. Еще немного текста. Еще немного текста. Еще немного текста.</p>
+        <p>Еще немного текста. Еще немного текста. Еще немного текста. Еще немного текста.</p>
+      </div>
     </div>
-</div>
 
+    <div class="window clip" tabindex="0" aria-label="Окошко 2 — клип">
+      <h1>Фигурное окно (clip-path)</h1>
+      <p class="lead">Здесь использован clip-path, чтобы сделать зубчатую/пятиугольную форму окна. Фон — тот же самый (фиксирован).</p>
+      <div class="content">
+        <p>Контент внутри — прокручиваемый. Посмотрите, как фон остаётся в одном месте для всех окон.</p>
+        <p>Можно комбинировать clip-path с background-attachment: fixed для кросс-браузерной поддержки там, где mask-image не нужна/не поддерживается.</p>
+        <p>Еще текст... Еще текст... Еще текст... (и т.д.)</p>
+        <p>Еще текст... Еще текст... Еще текст... (и т.д.)</p>
+      </div>
+    </div>
+
+    <div class="window mask-hole" tabindex="0" aria-label="Окошко 3 — отверстие">
+      <h1>Маска-отверстие</h1>
+      <p class="lead">Пример маски с "отверстием" (плавный переход). Поменяйте градиенты маски для нужной формы.</p>
+      <div class="content">
+        <p>Можно настраивать радиусы, положение и границы в градиенте маски, чтобы получить ровные или мягкие края.</p>
+        <p>И снова — скролл внутри, фон остаётся неподвижным.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- демонстрация длинной страницы под окнами -->
+  <div style="height:800px"></div>
 </body>
 </html>
