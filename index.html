@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Moving Mask Windows</title>
+<style>
+    body {
+        margin: 0;
+        height: 100vh;
+        overflow: hidden;
+        font-family: sans-serif;
+    }
+
+    /* Фон, который всегда фиксирован */
+    .bg {
+        position: fixed;
+        inset: 0;
+        background: url("https://picsum.photos/2000/1200") center/cover no-repeat;
+        z-index: 0;
+    }
+
+    /* Контейнер со скроллом и маской */
+    .masked-scroll {
+        position: relative;
+        height: 100vh;
+        overflow-y: scroll;
+        z-index: 1;
+
+        /* Маска: две круглые дырки */
+        mask-image:
+            radial-gradient(circle 140px at 50% 20%, transparent 0 140px, black 150px),
+            radial-gradient(circle 110px at 30% 70%, transparent 0 110px, black 120px);
+
+        /* чтобы маска двигалась вместе со скроллом */
+        mask-repeat: no-repeat;
+        mask-size: 100% 100%;
+        mask-position: 0 0; /* движется со скроллом */
+        
+        /* Safari support */
+        -webkit-mask-image:
+            radial-gradient(circle 140px at 50% 20%, transparent 0 140px, black 150px),
+            radial-gradient(circle 110px at 30% 70%, transparent 0 110px, black 120px);
+        -webkit-mask-repeat: no-repeat;
+        -webkit-mask-size: 100% 100%;
+        -webkit-mask-position: 0 0;
+    }
+
+    .content {
+        padding: 200px 40px;
+        min-height: 200vh;
+        color: white;
+        font-size: 28px;
+        line-height: 1.5;
+        background: rgba(0, 0, 0, 0.5); /* видно только внутри дырок */
+    }
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+
+<div class="masked-scroll">
+    <div class="content">
+        <p>Скролль вниз — маска движется!</p>
+        <p>Фон остаётся неподвижным.</p>
+        <p>Окошки — это прозрачные зоны маски.</p>
+        <p>Маска закреплена в элементе, который скроллится, поэтому она двигается вместе с контентом.</p>
+        <p>Можно сделать сколько угодно окон.</p>
+        <p>Можно анимировать их, менять размеры, поворачивать.</p>
+        <p>Можно даже сделать форму окна SVG-произвольной.</p>
+    </div>
+</div>
+
+</body>
+</html>
